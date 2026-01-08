@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.8-slim
 
 # Create a folder /app if it doesn't exist,
 # the /app folder is the current working directory
@@ -6,6 +6,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     libgomp1 \
+    curl \
  && rm -rf /var/lib/apt/lists/*
  
 COPY requirements.txt .
