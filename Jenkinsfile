@@ -9,7 +9,7 @@ pipeline {
     environment {
         REGISTRY = 'bitis2004/house-price-prediction-api'
         REGISTRY_CREDENTIAL = 'dockerhub'
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_TAG = "0.0.1"
     }
 
     stages {
