@@ -9,7 +9,7 @@ pipeline {
     environment {
         REGISTRY = 'bitis2004/house-price-prediction-api'
         REGISTRY_CREDENTIAL = 'dockerhub'
-        IMAGE_TAG = "lastest"
+        IMAGE_TAG = 'latest'
     }
 
     stages {
@@ -28,6 +28,8 @@ pipeline {
             steps {
                 echo 'Testing container...'
                 sh '''
+                  docker rm -f hp_test || true
+
                   docker run -d --name hp_test $REGISTRY:$IMAGE_TAG
 
                   sleep 5
