@@ -28,12 +28,25 @@ pipeline {
             steps {
                 echo 'Testing container...'
                 sh '''
-                  docker run -d --name hp_test -p 30000:30000 \
-                    $REGISTRY:$IMAGE_TAG
+                  docker run -d --name hp_test $REGISTRY:$IMAGE_TAG
 
                   sleep 5
 
-                  curl -f http://localhost:30000 || exit 1
+                  docker exec hp_test curl -f -X POST http://localhost:30000/predict \
+                    -H "Content-Type: application/json" \
+                    -d '{
+                    "MSSubClass": 60,
+                    "MSZoning": "RL",
+                    "LotArea": 7844,
+                    "LotConfig": "Inside",
+                    "BldgType": "1Fam",
+                    "OverallCond": 7,
+                    "YearBuilt": 1978,
+                    "YearRemodAdd": 1978,
+                    "Exterior1st": "HdBoard",
+                    "BsmtFinSF2": 0.0,
+                    "TotalBsmtSF": 672.0
+                    }'
 
                   docker rm -f hp_test
                 '''
