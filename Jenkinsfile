@@ -9,7 +9,7 @@ pipeline {
     environment {
         REGISTRY = 'bitis2004/house-price-prediction-api'
         REGISTRY_CREDENTIAL = 'dockerhub'
-        IMAGE_TAG = "0.0.1"
+        IMAGE_TAG = "lastest"
     }
 
     stages {
@@ -64,7 +64,6 @@ pipeline {
                     sh '''
                       echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                       docker push $REGISTRY:$IMAGE_TAG
-                      docker push $REGISTRY:latest
                     '''
                 }
             }
@@ -80,7 +79,8 @@ pipeline {
 
     post {
         always {
-            sh 'docker system prune -f'
+            echo 'Cleaning up Docker...'
+            sh 'docker system prune -af'
         }
     }
 }
