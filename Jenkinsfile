@@ -1,48 +1,73 @@
 pipeline {
     agent any
 
-    options{
-        // Max number of build logs to keep and days to keep
+    options {
         buildDiscarder(logRotator(numToKeepStr: '5', daysToKeepStr: '5'))
-        // Enable timestamp at each job in the pipeline
         timestamps()
     }
 
-    environment{
-        registry = 'quandvrobusto/house-price-prediction-api'
-        registryCredential = 'dockerhub'      
+    environment {
+        REGISTRY = 'bitis2004/house-price-prediction-api'
+        REGISTRY_CREDENTIAL = 'dockerhub'
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
-        stage('Test') {
-            agent {
-                docker {
-                    image 'python:3.8' 
-                }
-            }
+
+        stage('Build Image') {
             steps {
-                echo 'Testing model correctness..'
-                sh 'pip install -r requirements.txt && pytest'
+                echo 'Building Docker image...'
+                sh '''
+                  docker build -t $REGISTRY:$IMAGE_TAG .
+                  docker tag $REGISTRY:$IMAGE_TAG $REGISTRY:latest
+                '''
             }
         }
-        stage('Build') {
+
+        stage('Test Image') {
             steps {
-                script {
-                    echo 'Building image for deployment..'
-                    dockerImage = docker.build registry + ":$BUILD_NUMBER" 
-                    echo 'Pushing image to dockerhub..'
-                    docker.withRegistry( '', registryCredential ) {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
+                echo 'Testing container...'
+                sh '''
+                  docker run -d --name hp_test -p 30000:30000 \
+                    $REGISTRY:$IMAGE_TAG
+
+                  sleep 5
+
+                  curl -f http://localhost:30000 || exit 1
+
+                  docker rm -f hp_test
+                '''
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                echo 'Pushing image to Docker Hub...'
+                withCredentials([usernamePassword(
+                    credentialsId: REGISTRY_CREDENTIAL,
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                      docker push $REGISTRY:$IMAGE_TAG
+                      docker push $REGISTRY:latest
+                    '''
                 }
             }
         }
+
         stage('Deploy') {
             steps {
-                echo 'Deploying models..'
-                echo 'Running a script to trigger pull and start a docker container'
+                echo 'Deploying models...'
+                echo 'Trigger deploy script here'
             }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker system prune -f'
         }
     }
 }
