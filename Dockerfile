@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.9
 
 # Create a folder /app if it doesn't exist,
 # the /app folder is the current working directory
